@@ -1,0 +1,152 @@
+/*     */ package org.gradle.internal.resource.transport.http;
+/*     */ 
+/*     */ import java.io.IOException;
+/*     */ import java.io.InputStream;
+/*     */ import java.io.InputStreamReader;
+/*     */ import java.io.Reader;
+/*     */ import java.net.MalformedURLException;
+/*     */ import java.net.URI;
+/*     */ import java.net.URISyntaxException;
+/*     */ import java.util.ArrayList;
+/*     */ import java.util.List;
+/*     */ import org.cyberneko.html.parsers.SAXParser;
+/*     */ import org.gradle.internal.resource.ResourceException;
+/*     */ import org.gradle.internal.resource.UriResource;
+/*     */ import org.slf4j.Logger;
+/*     */ import org.slf4j.LoggerFactory;
+/*     */ import org.xml.sax.Attributes;
+/*     */ import org.xml.sax.InputSource;
+/*     */ import org.xml.sax.SAXException;
+/*     */ import org.xml.sax.helpers.DefaultHandler;
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ public class ApacheDirectoryListingParser
+/*     */ {
+/*  41 */   private static final Logger LOGGER = LoggerFactory.getLogger(ApacheDirectoryListingParser.class);
+/*     */   
+/*     */   public List<String> parse(URI baseURI, InputStream content, String contentType) throws Exception {
+/*  44 */     baseURI = addTrailingSlashes(baseURI);
+/*  45 */     if (contentType == null || !contentType.startsWith("text/html")) {
+/*  46 */       throw new ResourceException(String.format("Unsupported ContentType %s for DirectoryListing", new Object[] { contentType }));
+/*     */     }
+/*  48 */     String contentEncoding = UriResource.extractCharacterEncoding(contentType, "utf-8");
+/*  49 */     Reader htmlText = new InputStreamReader(content, contentEncoding);
+/*  50 */     InputSource inputSource = new InputSource(htmlText);
+/*  51 */     SAXParser htmlParser = new SAXParser();
+/*  52 */     AnchorListerHandler anchorListerHandler = new AnchorListerHandler(null);
+/*  53 */     htmlParser.setContentHandler(anchorListerHandler);
+/*  54 */     htmlParser.parse(inputSource);
+/*     */     
+/*  56 */     List<String> hrefs = anchorListerHandler.getHrefs();
+/*  57 */     List<URI> uris = resolveURIs(baseURI, hrefs);
+/*  58 */     return filterNonDirectChilds(baseURI, uris);
+/*     */   }
+/*     */   
+/*     */   private URI addTrailingSlashes(URI uri) throws IOException, URISyntaxException {
+/*  62 */     if (uri.getPath() == null) {
+/*  63 */       uri = new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), "/", uri.getQuery(), uri.getFragment());
+/*  64 */     } else if (!uri.getPath().endsWith("/") && !uri.getPath().endsWith(".html")) {
+/*  65 */       uri = new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath() + "/", uri.getQuery(), uri.getFragment());
+/*     */     } 
+/*     */     
+/*  68 */     return uri;
+/*     */   }
+/*     */   
+/*     */   private List<String> filterNonDirectChilds(URI baseURI, List<URI> inputURIs) throws MalformedURLException {
+/*  72 */     int baseURIPort = baseURI.getPort();
+/*  73 */     String baseURIHost = baseURI.getHost();
+/*  74 */     String baseURIScheme = baseURI.getScheme();
+/*     */     
+/*  76 */     List<String> uris = new ArrayList<String>();
+/*  77 */     String prefixPath = baseURI.getPath();
+/*  78 */     for (URI parsedURI : inputURIs) {
+/*  79 */       if (parsedURI.getHost() != null && !parsedURI.getHost().equals(baseURIHost)) {
+/*     */         continue;
+/*     */       }
+/*  82 */       if (parsedURI.getScheme() != null && !parsedURI.getScheme().equals(baseURIScheme)) {
+/*     */         continue;
+/*     */       }
+/*  85 */       if (parsedURI.getPort() != baseURIPort) {
+/*     */         continue;
+/*     */       }
+/*  88 */       if (parsedURI.getPath() != null && !parsedURI.getPath().startsWith(prefixPath)) {
+/*     */         continue;
+/*     */       }
+/*  91 */       String childPathPart = parsedURI.getPath().substring(prefixPath.length(), parsedURI.getPath().length());
+/*  92 */       if (childPathPart.startsWith("../")) {
+/*     */         continue;
+/*     */       }
+/*  95 */       if (childPathPart.equals("") || childPathPart.split("/").length > 1) {
+/*     */         continue;
+/*     */       }
+/*     */       
+/*  99 */       String path = parsedURI.getPath();
+/* 100 */       int pos = path.lastIndexOf('/');
+/* 101 */       if (pos < 0) {
+/* 102 */         uris.add(path); continue;
+/* 103 */       }  if (pos == path.length() - 1) {
+/* 104 */         int start = path.lastIndexOf('/', pos - 1);
+/* 105 */         if (start < 0) {
+/* 106 */           uris.add(path.substring(0, pos)); continue;
+/*     */         } 
+/* 108 */         uris.add(path.substring(start + 1, pos));
+/*     */         continue;
+/*     */       } 
+/* 111 */       uris.add(path.substring(pos + 1));
+/*     */     } 
+/*     */     
+/* 114 */     return uris;
+/*     */   }
+/*     */   
+/*     */   private List<URI> resolveURIs(URI baseURI, List<String> hrefs) {
+/* 118 */     List<URI> uris = new ArrayList<URI>();
+/* 119 */     for (String href : hrefs) {
+/*     */       try {
+/* 121 */         uris.add(baseURI.resolve(href));
+/* 122 */       } catch (IllegalArgumentException ex) {
+/* 123 */         LOGGER.debug(String.format("Cannot resolve anchor: %s", new Object[] { href }));
+/*     */       } 
+/*     */     } 
+/* 126 */     return uris;
+/*     */   }
+/*     */   
+/*     */   private class AnchorListerHandler extends DefaultHandler {
+/* 130 */     List<String> hrefs = new ArrayList();
+/*     */ 
+/*     */     
+/* 133 */     public List<String> getHrefs() { return this.hrefs; }
+/*     */ 
+/*     */     
+/*     */     public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
+/* 137 */       if (qName.equalsIgnoreCase("A")) {
+/* 138 */         String href = atts.getValue("href");
+/* 139 */         if (href != null)
+/* 140 */           this.hrefs.add(href); 
+/*     */       } 
+/*     */     }
+/*     */     
+/*     */     private AnchorListerHandler() {}
+/*     */   }
+/*     */ }
+
+
+/* Location:              C:\Users\hugo\.gradle\wrapper\dists\gradle-2.0-bin\5h57m9vra0mjv9qs45oqtsb5c0\gradle-2.0\lib\plugins\gradle-resources-http-2.0.jar!\org\gradle\internal\resource\transport\http\ApacheDirectoryListingParser.class
+ * Java compiler version: 5 (49.0)
+ * JD-Core Version:       1.0.7
+ */

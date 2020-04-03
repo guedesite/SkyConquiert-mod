@@ -1,0 +1,64 @@
+package fr.neocraft.main.Proxy.Client.event;
+
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent.PlayerTickEvent;
+import fr.neocraft.main.Blocks.BlockElevateur;
+import fr.neocraft.main.Blocks.Special.BlockFuturist;
+import fr.neocraft.main.Item.ItemFaux;
+import fr.neocraft.main.Proxy.Serveur.Stage.RegisterStage;
+import fr.neocraft.main.Proxy.Serveur.Stage.Stage;
+import fr.neocraft.main.Proxy.Serveur.player.PlayerStats;
+import fr.neocraft.main.Proxy.Serveur.player.teleport;
+import fr.neocraft.main.ServeurManager.DailyManager;
+import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
+
+public class ElevateurEvent {
+
+	@SubscribeEvent
+	public void PlayerTick(PlayerTickEvent event)
+	{
+		boolean flag = false;
+		for(ItemStack s:event.player.inventory.armorInventory) {
+			
+		}
+		if(!flag)
+		{
+		
+			int x = (int)event.player.posX;
+			int z = (int)event.player.posZ;
+					
+			if(x < 0)
+			{
+				x--;
+			}if(z < 0)
+			{
+				z--;
+			}
+					for(int y = 1; y <= 20; y++)
+					{
+						Block b = event.player.worldObj.getBlock(x,(int) event.player.posY - y, z);
+						if(b instanceof BlockElevateur && 2 < y )
+						{
+						
+							if(y <= ((BlockElevateur)b).radius )
+							{
+								if(!event.player.isSneaking())
+								{
+									event.player.motionY = 0.2 * (event.player.worldObj.getBlockMetadata(x,(int) event.player.posY - y, z)+1);
+								} else {
+									event.player.motionY = -0.2 * (event.player.worldObj.getBlockMetadata(x,(int) event.player.posY - y, z)+1);
+								}
+								
+							}
+						} 
+					}
+		}
+	}
+
+}
+
+

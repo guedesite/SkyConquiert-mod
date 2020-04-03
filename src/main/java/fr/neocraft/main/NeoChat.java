@@ -1,0 +1,69 @@
+package fr.neocraft.main;
+
+import net.minecraft.util.EnumChatFormatting;
+
+public class NeoChat {
+	public static final String
+		red = EnumChatFormatting.RED+"",
+		l_yellow = EnumChatFormatting.GOLD+"",
+		d_yellow = EnumChatFormatting.YELLOW+"",
+		l_green = EnumChatFormatting.GREEN+"",
+		d_green = EnumChatFormatting.DARK_GREEN+"",
+		d_red = EnumChatFormatting.DARK_RED+"",
+		l_purple = EnumChatFormatting.LIGHT_PURPLE+"",
+		d_purple = EnumChatFormatting.DARK_PURPLE+"",
+		l_gray = EnumChatFormatting.GRAY+"",
+		d_gray = EnumChatFormatting.DARK_GRAY+"",
+		m = EnumChatFormatting.UNDERLINE+"",
+		r = EnumChatFormatting.RESET+ "",
+		b = EnumChatFormatting.BOLD+"";
+	public static final String 
+		DENY_ILE_FULL = "neo.DENY_ILE_FULL",
+		DENY_NO_HOME = "neo.DENY_NO_HOME",
+		DENY_NO_ILE = "neo.DENY_NO_ILE",
+		DENY_NOT_ADMIN = "neo.DENY_NOT_ADMIN",
+		DENY_NO_INVITE = "neo.DENY_NO_INVITE",
+		DENY_HOME_NOT_IN_ILE = "neo.DENY_HOME_NOT_IN_ILE",
+		DENY_PLAYER_NOT_ONLINE = "neo.DENY_PLAYER_NOT_ONLINE",
+		DENY_WORLD_NOT_VALIDE = "neo.DENY_WORLD_NOT_VALIDE",
+		DENY_PLAYER_HAS_TO_MANY_INVITE = "neo.DENY_PLAYER_HAS_TO_MANY_INVITE",
+		DENY_DEJA_INVITE = "neo.DENY_DEJA_INVITE",
+		DENY_INVITE_NOT_EXIST = "neo.DENY_INVITE_NOT_EXIST",
+		DENY_TO_MANY_PLAYER_IN_ILE = "neo.DENY_TO_MANY_PLAYER_IN_ILE",
+		DENY_NOMBRE_NOT_VALID = "neo.DENY_NOMBRE_NOT_VALID",
+		DENY_OWNER_OF_HIS_ILE = "neo.DENY_OWNER_OF_HIS_ILE",
+		DENY_CANT_DO_NOW = "neo.DENY_CANT_DO_NOW",
+		DENY_NO_MONEY = "neo.DENY_NO_MONEY", 
+		DENY_NO_MONEY_ALSO = "neo.DENY_NO_MONEY_ALSO", 
+		DENY_ERROR = "neo.DENY_ERROR",
+		DENY_NO_PLAYER = "neo.DENY_NO_PLAYER",
+		DENY_NO_GOOD = "neo.DENY_NO_GOOD",
+		DENY_ALSO_ILE = "neo.DENY_ALSO_ILE",
+		
+		CONFIRM_BY = "neo.CONFIRM_BY",
+		CONFIRM_BY_2 = "neo.CONFIRM_BY_2",
+		CONFIRM_INVITE_HAS_STAGE ="neo.CONFIRM_INVITE_HAS_STAGE",
+		CONFIRM_INVITE_HAS_STAGE_2 ="neo.CONFIRM_INVITE_HAS_STAGE_2",
+		CONFIRM_INVITE = "neo.CONFIRM_INVITE",
+		CONFIRM_DISBAND = "neo.CONFIRM_DISBAND",
+		
+		EVENT_BY_YOUR_STAGE ="neo.EVENT_BY_YOUR_STAGE",
+		EVENT_PLAYER_BY_STAGE = "neo.EVENT_PLAYER_BY_STAGE",
+		TELEPORT_IN_PROGRESS = "neo.TELEPORT_IN_PROGRESS",
+				
+		ALLOW_BY_STAGE = "neo.ALLOW_BY_STAGE",
+		ALLOW_CONGRATULATION = "neo.ALLOW_CONGRATULATION",
+		ALLOW_NEW_NAME = "neo.ALLOW_NEW_NAME",
+		ALLOW_DISBAND = "neo.ALLOW_DISBAND",
+		ALLOW_NEW_ILE = "neo.ALLOW_NEW_ILE",
+		ALLOW_NEW_HOME = "neo.ALLOW_NEW_HOME",
+		ALLOW_RECIEVE_INVITE = "neo.ALLOW_RECIEVE_INVITE",
+		ALLOW_INVITE = "neo.ALLOW_INVITE",
+		ALLOW_SUCCESS_GAIN_ILE ="neo.ALLOW_SUCCESS_GAIN_ILE",
+		ALLOW_LIST_INVITE ="neo.ALLOW_LIST_INVITE",
+		ALLOW_KICK_PLAYER = "neo.ALLOW_KICK_PLAYER",
+		ALLOW_MY_MONEY = "neo.ALLOW_MY_MONEY",
+		ALLOW_BEING_KICK = "neo.ALLOW_BEING_KICK",
+		ALLOW_PAY = "neo.ALLOW_PAY";
+	
+}

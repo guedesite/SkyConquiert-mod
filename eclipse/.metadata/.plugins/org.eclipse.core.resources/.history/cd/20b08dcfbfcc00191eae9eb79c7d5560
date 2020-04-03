@@ -1,0 +1,65 @@
+package fr.neocraft.main.Pet;
+
+import fr.neocraft.main.neoreference;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.renderer.entity.RenderLiving;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.ResourceLocation;
+
+public class RenderPet extends RenderLiving
+{
+    
+    private String bar = I18n.format("neo.pet.bar");
+    private String Color = I18n.format("neo.specq");
+    public RenderPet()
+    {
+        super(new PetModelManager(), 1F);
+    }
+    
+    protected ResourceLocation getEntiyTexture(EntityLiving living)
+    {
+        return this.getEntityTexture((EntityPet) living);
+    }
+
+    @Override
+    protected ResourceLocation getEntityTexture(Entity p_110775_1_)
+    {
+        return PetRegister.getDataClient(((EntityPet)p_110775_1_).getId()).texture;
+    }
+    
+
+
+    
+    private String genExpBarPet(EntityPet pet) {
+    	
+    	return ((100*pet.curentxp)/pet.getMustExpLvl(pet.getLvl()))+"%";
+    }
+    
+    
+   
+    public void doRender(EntityLiving p_76986_1_, double p_76986_2_, double p_76986_4_, double p_76986_6_, float p_76986_8_, float p_76986_9_)
+    {
+    	super.doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);
+    	EntityPet pet = ((EntityPet)p_76986_1_);
+        if(!Minecraft.getMinecraft().thePlayer.getCommandSenderName().equals(pet.pseudo))
+        {
+        	this.func_147906_a(p_76986_1_, pet.pseudo,p_76986_2_, p_76986_4_ +0.3D, p_76986_6_, 64);
+        	
+        }
+        	 if(pet.LastChange == 0)
+             {
+             	this.func_147906_a(p_76986_1_, "niveau "+pet.getLvl(),p_76986_2_, p_76986_4_, p_76986_6_, 64);
+             } else {
+             	this.func_147906_a(p_76986_1_, "niveau "+pet.getLvl(),p_76986_2_, p_76986_4_, p_76986_6_, 64);
+             	this.func_147906_a(p_76986_1_, genExpBarPet(pet),p_76986_2_, p_76986_4_-0.3D, p_76986_6_, 64);
+             }
+       
+        
+    }
+   
+    
+}

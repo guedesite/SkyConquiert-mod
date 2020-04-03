@@ -1,0 +1,300 @@
+package fr.neocraft.main.ServeurManager;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import fr.neocraft.main.main;
+import fr.neocraft.main.Proxy.Serveur.Entity.DragFire;
+import fr.neocraft.main.Proxy.Serveur.Entity.EntityPet;
+import fr.neocraft.main.Proxy.Serveur.Entity.MoneyOrb;
+import fr.neocraft.main.Proxy.Serveur.Stage.RegisterStage;
+import fr.neocraft.main.Proxy.Serveur.Stage.Stage;
+import fr.neocraft.main.Proxy.Serveur.Stage.StageDonjon;
+import fr.neocraft.main.Proxy.Serveur.player.PlayerStats;
+import info.ata4.minecraft.dragon.server.entity.EntityTameableDragon;
+import net.minecraft.block.Block;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityXPOrb;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.DimensionManager;
+
+public class DonjonManager {
+
+	public static int DonjonId = 0;
+	public static ArrayList<Stage> id6 = new ArrayList<Stage>();
+	private static Random r = new Random();
+	public static ArrayList<StageDonjon> ActiveDonjon = new ArrayList<StageDonjon>();
+	
+	// 8 163 8
+
+	public static void clearAllDonjon()
+	{
+		ActiveDonjon = new ArrayList<StageDonjon>();
+		for(int i = 0; i < id6.size();  i++)
+		{
+			
+			Stage s = id6.get(i);
+			int X2 = s.getXpos();
+			int Z2 = s.getZpos();
+			World w = DimensionManager.getWorld(s.getIdWorld());
+			int minx = X2 * 16;
+			int minz = Z2 * 16;
+			int miny = 0;
+			for(int y = 0; y < 255; y++)
+			{
+				for(int x = 0; x < 16; x++)
+				{
+					for(int z = 0; z < 16; z++)
+					{
+						if(w.getBlock(minx+x, miny+y, minz+z) != Blocks.air)
+						{
+							w.setBlock(minx+x, miny+y, minz+z, Blocks.air);
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	
+	public static void tryDonjon()
+	{
+		if(DonjonId > 0 && !id6.isEmpty())
+		{
+			for(int i = 0; i < id6.size();  i++)
+			{
+				if(r.nextInt(20) == 1)
+				{
+					ActiveDonjon.add(new StageDonjon(id6.get(i), r.nextInt(DonjonId)));
+				}
+			}
+		}
+		
+		if(!ActiveDonjon.isEmpty())
+		{
+			for(int i = 0; i < ActiveDonjon.size(); i++)
+			{
+				StageDonjon s = (StageDonjon)ActiveDonjon.get(i);
+				if(s.checkTemps())
+				{
+					Chunk c = s.w.getChunkFromChunkCoords(s.X, s.Z);
+					if(c.hasEntities)
+					{
+						for(List e:c.entityLists)
+						{
+							for(Object en:e)
+							{
+								Entity entity = (Entity)en;
+								if(!(entity instanceof EntityTameableDragon) 
+										&& !(entity instanceof EntityPet) 
+										&& !(entity instanceof EntityPlayer)
+										&& !(entity instanceof EntityXPOrb) 
+										&& !(entity instanceof MoneyOrb)
+										&& !(entity instanceof DragFire))
+								{
+									entity.setDead();
+								}
+							}
+						}
+					}
+					
+					ClearDonjon(s);
+					ActiveDonjon.remove(i);
+					
+				}
+			}
+		}
+	}
+	
+	public static void tryDonjonTrue()
+	{
+		if(DonjonId > 0 && !id6.isEmpty())
+		{
+			for(int i = 0; i < id6.size();  i++)
+			{
+				
+					ActiveDonjon.add(new StageDonjon(id6.get(i), r.nextInt(DonjonId)));
+					System.out.println(id6.get(i).getXpos()+"-"+id6.get(i).getZpos());
+				
+			}
+		}
+		
+		if(!ActiveDonjon.isEmpty())
+		{
+			for(int i = 0; i < ActiveDonjon.size(); i++)
+			{
+				StageDonjon s = (StageDonjon)ActiveDonjon.get(i);
+				if(s.checkTemps())
+				{
+					Chunk c = s.w.getChunkFromChunkCoords(s.X, s.Z);
+					for(List e:c.entityLists)
+					{
+						for(Object en:e)
+						{
+							Entity entity = (Entity)en;
+							if(!(entity instanceof EntityTameableDragon) 
+									&& !(entity instanceof EntityPet) 
+									&& !(entity instanceof EntityPlayer)
+									&& !(entity instanceof EntityXPOrb) 
+									&& !(entity instanceof MoneyOrb)
+									&& !(entity instanceof DragFire))
+							{
+								entity.setDead();
+							}
+						}
+					}
+					
+					ClearDonjon(s);
+					ActiveDonjon.remove(i);
+					
+				}
+			}
+		}
+	}
+	
+	public static void DonjonEnd(final int Chunkx, final int Chunkz, final int worldid) {
+		new Timer().schedule(new TimerTask() {
+			 @Override
+			  public void run() {
+				for(int i = 0; i < ActiveDonjon.size(); i++)
+				{
+					StageDonjon s = (StageDonjon)ActiveDonjon.get(i);
+					if(s.X == Chunkx && s.Z == Chunkz && s.w.provider.dimensionId == worldid)
+					{
+						Chunk c = s.w.getChunkFromChunkCoords(s.X, s.Z);
+						for(List e:c.entityLists)
+						{
+							for(Object en:e)
+							{
+								Entity entity = (Entity)en;
+								if(!(entity instanceof EntityTameableDragon) 
+										&& !(entity instanceof EntityPet) 
+										&& !(entity instanceof EntityXPOrb) 
+										&& !(entity instanceof MoneyOrb)
+										&& !(entity instanceof DragFire))
+								{
+									if(entity instanceof EntityPlayer)
+									{
+										PlayerStats.get((EntityPlayer)entity).giveMoney(10000 + 1000 * s.w.rand.nextInt(6), (EntityPlayer)entity);
+									} else {
+										entity.setDead();
+									}
+								}
+							}
+						}
+						
+						ClearDonjon(s);
+						ActiveDonjon.remove(i);
+					}
+				}
+			 }
+		} , 5000);
+	}
+	
+	public static void LoadDonjonId()
+	{
+		DonjonId = 0;
+		while(new File("assets/donjon/donjon-"+DonjonId+".data").exists())
+		{
+			DonjonId++;
+		}
+		System.out.println("Register "+DonjonId+" Donjon !");
+	}
+	
+	public static void RegisterDonjon(EntityPlayer player)
+	{
+		Stage stage = RegisterStage.getStageAtXY(player.chunkCoordX, player.chunkCoordZ, player.worldObj);
+		if(stage.getIdStage() != 6) { return;}
+		int minx = stage.getXpos() * 16;
+		int minz = stage.getZpos()*16;
+		PrintWriter writer = null;
+		try {
+			writer = new PrintWriter(new File("assets/donjon/donjon-"+DonjonId+".data"), "UTF-8");
+			DonjonId++;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		if(writer == null)
+		{
+			player.addChatMessage(new ChatComponentTranslation("null"));
+			return;
+		}
+		for(int y = 0; y < 255; y++)
+		{
+			for(int x = 0; x < 16; x++)
+			{
+				for(int z = 0; z < 16; z++)
+				{
+					if(player.worldObj.getBlock(minx+x, y, minz+z) != Blocks.air)
+					{
+						writer.
+						println(Block.getIdFromBlock(
+								player.worldObj.
+								getBlock(
+										minx+x, y, minz+z)));
+        				writer.println(x);
+						writer.println(y);
+						writer.println(z);
+						writer.println(player.worldObj.getBlockMetadata(minx+x, y, minz+z));
+						player.worldObj.setBlockToAir(minx+x, y, minz+z);
+					}
+				}
+			}
+		}
+		writer.close();
+		player.addChatMessage(new ChatComponentTranslation("Register new donjon id:"+(DonjonId-1)));
+	}
+	
+	private static void ClearDonjon(StageDonjon s)
+	{
+	
+		
+		 BufferedReader br = null;
+			try {
+				br = new BufferedReader(new FileReader("assets/donjon/donjon-"+s.Id+".data"));
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			  String line = "";
+			  int id,x,y,z,meta;
+			  
+			  int minx = s.X*16;
+			  int minz = s.Z*16;
+			  try {
+				  while ((line =br.readLine()) != null) 
+				  {
+					  try {
+						  id = Integer.parseInt(line);
+						  x = Integer.parseInt(br.readLine());
+						  y = Integer.parseInt(br.readLine());
+						  z = Integer.parseInt(br.readLine());
+						  meta = Integer.parseInt(br.readLine());
+						  s.w.setBlock(minx+x, y, minz+z, Blocks.air);
+					  } catch(Exception e) {
+							
+					    }
+				  }
+				  br.close();
+			  } catch(Exception e) {
+					
+		    }
+	}
+	
+	
+}

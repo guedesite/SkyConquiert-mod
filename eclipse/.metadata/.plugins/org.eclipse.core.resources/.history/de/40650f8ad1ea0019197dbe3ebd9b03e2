@@ -1,0 +1,5 @@
+package fr.neocraft.packet;
+
+public class PlayerEvent extends PlayerListener{
+
+}

@@ -1,0 +1,1 @@
+@echo off set /a nbFichiers=0 for %%a in (*.*) do set /a nbFichiers+=1 echo %nbFichiers%

@@ -1,0 +1,73 @@
+package fr;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class run {
+
+	public static void main(String[] args) {
+		try
+        {
+			 BufferedReader br;
+				try {
+					br = new BufferedReader(new FileReader("assets/dataMapStage.nc"));
+					String line = "";
+					String[] d;
+					int id23 = bdd.getMaxOf("id2", bdd.getStringStage()) + 1;
+					while((line = br.readLine()) != null)
+					{
+						d = GetArrayString(line);
+						int pos = Integer.parseInt(d[0]);
+						int id = id23 + pos;
+						bdd.execute(d[1].replaceAll("%id%", id+"").replaceAll("%world%", ""+player.worldObj.provider.dimensionId));
+					}
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+
+				}	
+         
+        }
+        catch (NumberFormatException ignore)
+        {
+        	System.out.println("nnn");
+        }
+
+	}
+	
+	public String[] GetArrayString(String txt)
+	{
+		if(txt != null)
+		{
+			int t = txt.length();
+			String[] finale = new String[compterOccurrences(txt, '$')];
+			String pre = "";
+			char cara, cara2;
+			int d = 0;
+			for(int i = 0; i < t; i++) 
+			{
+				
+				cara = txt.charAt(i);
+				if(cara == '$')
+				{
+					finale[d] = pre;
+					pre = "";
+					d++;
+				}
+				else
+				{
+					pre += cara;
+				}
+			}
+			return finale;
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+}

@@ -1,0 +1,70 @@
+/*    */ package org.gradle.internal.resource.transport.http.ntlm;
+/*    */ 
+/*    */ import java.io.IOException;
+/*    */ import jcifs.ntlmssp.Type1Message;
+/*    */ import jcifs.ntlmssp.Type2Message;
+/*    */ import jcifs.ntlmssp.Type3Message;
+/*    */ import jcifs.util.Base64;
+/*    */ import org.apache.http.auth.AuthScheme;
+/*    */ import org.apache.http.auth.AuthSchemeFactory;
+/*    */ import org.apache.http.impl.auth.NTLMEngine;
+/*    */ import org.apache.http.impl.auth.NTLMEngineException;
+/*    */ import org.apache.http.impl.auth.NTLMScheme;
+/*    */ import org.apache.http.impl.client.DefaultHttpClient;
+/*    */ import org.apache.http.params.HttpParams;
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ public class NTLMSchemeFactory
+/*    */   implements AuthSchemeFactory
+/*    */ {
+/* 36 */   public static void register(DefaultHttpClient httpClient) { httpClient.getAuthSchemes().register("ntlm", new NTLMSchemeFactory()); }
+/*    */ 
+/*    */ 
+/*    */   
+/* 40 */   public AuthScheme newInstance(HttpParams params) { return new NTLMScheme(new JCIFSEngine(null)); }
+/*    */   
+/*    */   private static class JCIFSEngine implements NTLMEngine {
+/*    */     private JCIFSEngine() {}
+/*    */     
+/*    */     public String generateType1Msg(String domain, String workstation) throws NTLMEngineException {
+/* 46 */       Type1Message type1Message = new Type1Message(Type1Message.getDefaultFlags(), domain, workstation);
+/* 47 */       return Base64.encode(type1Message.toByteArray());
+/*    */     }
+/*    */     
+/*    */     public String generateType3Msg(String username, String password, String domain, String workstation, String challenge) throws NTLMEngineException {
+/* 51 */       Type2Message type2Message = decodeType2Message(challenge);
+/* 52 */       Type3Message type3Message = new Type3Message(type2Message, password, domain, username, workstation, Type3Message.getDefaultFlags());
+/* 53 */       return Base64.encode(type3Message.toByteArray());
+/*    */     }
+/*    */     
+/*    */     private Type2Message decodeType2Message(String challenge) throws NTLMEngineException {
+/*    */       try {
+/* 58 */         return new Type2Message(Base64.decode(challenge));
+/* 59 */       } catch (IOException exception) {
+/* 60 */         throw new NTLMEngineException("Invalid Type2 message", exception);
+/*    */       } 
+/*    */     }
+/*    */   }
+/*    */ }
+
+
+/* Location:              C:\Users\hugo\.gradle\wrapper\dists\gradle-2.0-bin\5h57m9vra0mjv9qs45oqtsb5c0\gradle-2.0\lib\plugins\gradle-resources-http-2.0.jar!\org\gradle\internal\resource\transport\http\ntlm\NTLMSchemeFactory.class
+ * Java compiler version: 5 (49.0)
+ * JD-Core Version:       1.0.7
+ */

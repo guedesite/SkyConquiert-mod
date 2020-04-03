@@ -1,0 +1,62 @@
+/*    */ package org.gradle.internal.resource.transport.http;
+/*    */ 
+/*    */ import java.io.IOException;
+/*    */ import java.io.InputStream;
+/*    */ import java.net.URI;
+/*    */ import java.util.List;
+/*    */ import org.gradle.api.Transformer;
+/*    */ import org.gradle.internal.resource.ResourceException;
+/*    */ import org.gradle.internal.resource.transfer.ExternalResourceLister;
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ public class HttpResourceLister
+/*    */   implements ExternalResourceLister
+/*    */ {
+/*    */   private HttpResourceAccessor accessor;
+/*    */   
+/* 32 */   public HttpResourceLister(HttpResourceAccessor accessor) { this.accessor = accessor; }
+/*    */ 
+/*    */   
+/*    */   public List<String> list(final URI parent) throws IOException {
+/* 36 */     HttpResponseResource resource = this.accessor.getResource(parent);
+/* 37 */     if (resource == null) {
+/* 38 */       return null;
+/*    */     }
+/*    */     try {
+/* 41 */       return (List)resource.withContent(new Transformer<List<String>, InputStream>() {
+/*    */             public List<String> transform(InputStream inputStream) {
+/* 43 */               String contentType = resource.getContentType();
+/* 44 */               ApacheDirectoryListingParser directoryListingParser = new ApacheDirectoryListingParser();
+/*    */               try {
+/* 46 */                 return directoryListingParser.parse(parent, inputStream, contentType);
+/* 47 */               } catch (Exception e) {
+/* 48 */                 throw new ResourceException("Unable to parse HTTP directory listing.", e);
+/*    */               } 
+/*    */             }
+/*    */           });
+/*    */     } finally {
+/* 53 */       resource.close();
+/*    */     } 
+/*    */   }
+/*    */ }
+
+
+/* Location:              C:\Users\hugo\.gradle\wrapper\dists\gradle-2.0-bin\5h57m9vra0mjv9qs45oqtsb5c0\gradle-2.0\lib\plugins\gradle-resources-http-2.0.jar!\org\gradle\internal\resource\transport\http\HttpResourceLister.class
+ * Java compiler version: 5 (49.0)
+ * JD-Core Version:       1.0.7
+ */

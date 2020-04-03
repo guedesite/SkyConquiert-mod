@@ -1,0 +1,146 @@
+/*     */ package org.gradle.internal.resource.transport.http;
+/*     */ 
+/*     */ import java.io.IOException;
+/*     */ import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+/*     */ import org.apache.http.client.HttpClient;
+/*     */ import org.apache.http.client.methods.HttpGet;
+/*     */ import org.apache.http.client.methods.HttpHead;
+/*     */ import org.apache.http.client.methods.HttpRequestBase;
+/*     */ import org.apache.http.impl.client.DecompressingHttpClient;
+/*     */ import org.apache.http.impl.client.SystemDefaultHttpClient;
+/*     */ import org.apache.http.protocol.BasicHttpContext;
+/*     */ import org.apache.http.util.EntityUtils;
+/*     */ import org.gradle.api.UncheckedIOException;
+/*     */ import org.slf4j.Logger;
+/*     */ import org.slf4j.LoggerFactory;
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ public class HttpClientHelper
+/*     */ {
+/*  38 */   private static final Logger LOGGER = LoggerFactory.getLogger(HttpClientHelper.class);
+/*     */   public HttpClientHelper(HttpSettings settings) {
+/*  40 */     this.httpContext = new BasicHttpContext();
+/*     */ 
+/*     */     
+/*  43 */     alwaysUseKeepAliveConnections();
+/*     */     
+/*  45 */     SystemDefaultHttpClient systemDefaultHttpClient = new SystemDefaultHttpClient();
+/*  46 */     (new HttpClientConfigurer(settings)).configure(systemDefaultHttpClient);
+/*  47 */     this.client = new DecompressingHttpClient(systemDefaultHttpClient);
+/*     */   }
+/*     */ 
+/*     */   
+/*     */   private final HttpClient client;
+/*     */   private final BasicHttpContext httpContext;
+/*     */   
+/*  54 */   private void alwaysUseKeepAliveConnections() { System.setProperty("http.keepAlive", "true"); }
+/*     */ 
+/*     */ 
+/*     */   
+/*  58 */   public HttpResponse performRawHead(String source) { return performRequest(new HttpHead(source)); }
+/*     */ 
+/*     */ 
+/*     */   
+/*  62 */   public HttpResponse performHead(String source) { return processResponse(source, "HEAD", performRawHead(source)); }
+/*     */ 
+/*     */ 
+/*     */   
+/*  66 */   public HttpResponse performRawGet(String source) { return performRequest(new HttpGet(source)); }
+/*     */ 
+/*     */ 
+/*     */   
+/*  70 */   public HttpResponse performGet(String source) { return processResponse(source, "GET", performRawGet(source)); }
+/*     */   
+/*     */   public HttpResponse performRequest(HttpRequestBase request) {
+/*     */     HttpResponse response;
+/*  74 */     String method = request.getMethod();
+/*     */ 
+/*     */     
+/*     */    
+/*  78 */       response = executeGetOrHead(request);
+/*  79 */     
+/*     */     
+/*  83 */     return response;
+/*     */   }
+/*     */   
+/*     */   protected HttpResponse executeGetOrHead(HttpRequestBase method) {
+/*  87 */     HttpResponse httpResponse = null;
+				try {
+					httpResponse = performHttpRequest(method);
+				} catch (ClientProtocolException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+/*     */     
+/*  89 */     if (!wasSuccessful(httpResponse)) {
+/*  90 */       try {
+						EntityUtils.consume(httpResponse.getEntity());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+/*  91 */       return httpResponse;
+/*     */     } 
+/*  93 */     return httpResponse;
+/*     */   }
+/*     */   
+/*     */   public boolean wasMissing(HttpResponse response) {
+/*  97 */     int statusCode = response.getStatusLine().getStatusCode();
+/*  98 */     return (statusCode == 404);
+/*     */   }
+/*     */   
+/*     */   public boolean wasSuccessful(HttpResponse response) {
+/* 102 */     int statusCode = response.getStatusLine().getStatusCode();
+/* 103 */     return (statusCode >= 200 && statusCode < 300);
+/*     */   }
+/*     */ 
+/*     */   
+/*     */   public HttpResponse performHttpRequest(HttpRequestBase request) throws ClientProtocolException, IOException {
+/* 108 */     this.httpContext.removeAttribute("http.protocol.redirect-locations");
+/*     */     
+/* 110 */     LOGGER.debug("Performing HTTP {}: {}", request.getMethod(), request.getURI());
+/* 111 */     return this.client.execute(request, this.httpContext);
+/*     */   }
+/*     */   
+/*     */   private HttpResponse processResponse(String source, String method, HttpResponse response) {
+/* 115 */     if (wasMissing(response)) {
+/* 116 */       LOGGER.info("Resource missing. [HTTP {}: {}]", method, source);
+/* 117 */       return null;
+/*     */     } 
+/* 119 */     if (!wasSuccessful(response)) {
+/* 120 */       LOGGER.info("Failed to get resource: {}. [HTTP {}: {}]", new Object[] { method, response.getStatusLine(), source });
+/* 121 */       throw new UncheckedIOException(String.format("Could not %s '%s'. Received status code %s from server: %s", new Object[] { method, source, Integer.valueOf(response.getStatusLine().getStatusCode()), response.getStatusLine().getReasonPhrase() }));
+/*     */     } 
+/*     */ 
+/*     */     
+/* 125 */     return response;
+/*     */   }
+/*     */ }
+
+
+/* Location:              C:\Users\hugo\.gradle\wrapper\dists\gradle-2.0-bin\5h57m9vra0mjv9qs45oqtsb5c0\gradle-2.0\lib\plugins\gradle-resources-http-2.0.jar!\org\gradle\internal\resource\transport\http\HttpClientHelper.class
+ * Java compiler version: 5 (49.0)
+ * JD-Core Version:       1.0.7
+ */

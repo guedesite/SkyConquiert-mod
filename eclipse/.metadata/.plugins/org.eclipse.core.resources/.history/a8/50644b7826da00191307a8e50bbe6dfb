@@ -1,0 +1,139 @@
+package fr.neocraft.main.ServeurManager;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Random;
+
+import fr.neocraft.main.main;
+import fr.neocraft.main.Proxy.Serveur.Stage.RegisterStage;
+import fr.neocraft.main.Proxy.Serveur.Stage.Stage;
+import fr.neocraft.main.Proxy.Serveur.Stage.StageDonjon;
+import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.world.World;
+
+public class DonjonManager {
+
+	public static int DonjonId = 0;
+	public static ArrayList<Stage> id6 = new ArrayList<Stage>();
+	private static Random r = new Random();
+	public static ArrayList<StageDonjon> ActiveDonjon = new ArrayList<StageDonjon>();
+	
+	public static void tryDonjon()
+	{
+		if(DonjonId > 0 && !id6.isEmpty())
+		{
+			for(int i = 0; i < id6.size();  i++)
+			{
+				if(r.nextInt(100) == 1)
+				{
+					
+				}
+			}
+		}
+		
+		if(!ActiveDonjon.isEmpty())
+		{
+			for(int i = 0; i < ActiveDonjon.size(); i++)
+			{
+				StageDonjon s = (StageDonjon)ActiveDonjon.get(i);
+				if(s.checkTemps())
+				{
+					if(s.boss != null)
+					{
+						s.boss.setDead();
+						ClearDonjon(s);
+						ActiveDonjon.remove(i);
+					}
+				}
+			}
+		}
+	}
+	
+	public static void LoadDonjonId()
+	{
+		DonjonId = 0;
+		while(new File("assets/donjon/donjon-"+DonjonId+".data").exists())
+		{
+			DonjonId++;
+		}
+		System.out.println("Register "+DonjonId+" Donjon !");
+	}
+	
+	public static void RegisterDonjon(World w, EntityPlayer player)
+	{
+		Stage stage = RegisterStage.getStageAtXY(player.chunkCoordX, player.chunkCoordZ, player.worldObj);
+		if(stage.getIdStage() != 6) { return;}
+		int minx = stage.getXpos() * 16;
+		int minz = stage.getZpos()*16;
+		int miny = 0;
+		Block b;
+		PrintWriter writer = null;
+		try {
+			writer = new PrintWriter(new File("assets/donjon/donjon-"+DonjonId+".data"), "UTF-8");
+			DonjonId++;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		for(int y = 0; y < 255; y++)
+		{
+			for(int x = 0; x < 16; x++)
+			{
+				for(int z = 0; z < 16; z++)
+				{
+						writer.println(Block.getIdFromBlock(w.getBlock(minx+x, miny+y, minz+z)));
+        				writer.println(x);
+						writer.println(y);
+						writer.println(z);
+						writer.println(w.getBlockMetadata(minx+x, miny+y, minz+z));
+
+				}
+			}
+		}
+		writer.close();
+		player.addChatMessage(new ChatComponentTranslation("Register new donjon id:"+DonjonId));
+	}
+	
+	private static void ClearDonjon(StageDonjon s)
+	{
+	
+		 BufferedReader br = null;
+			try {
+				br = new BufferedReader(new FileReader("assets/donjon/donjon-"+s.Id+".data"));
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			  String line = "";
+			  int id,x,y,z,meta;
+			  try {
+				  while ((line =br.readLine()) != null) 
+				  {
+					  try {
+						  id = Integer.parseInt(line);
+						  x = Integer.parseInt(br.readLine());
+						  y = Integer.parseInt(br.readLine());
+						  z = Integer.parseInt(br.readLine());
+						  meta = Integer.parseInt(br.readLine());
+						  s.w.setBlock(x, y, z, Blocks.air);
+					  } catch(Exception e) {
+							
+					    }
+				  }
+				  br.close();
+			  } catch(Exception e) {
+					
+		    }
+	}
+	
+	
+}

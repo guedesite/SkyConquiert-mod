@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<list key="org.eclipse.ui.internal.wizards.datatransfer.SmartImportRootWizardPage.knownSources">
+		<item value="C:\Users\hugo\Desktop\gradle-resources-http-2.0.jar.src"/>
+		<item value="C:\Users\hugo\Desktop\devellopement\Thermos source\thermos neocraft\Thermos-58"/>
+		<item value="C:\Users\hugo\Desktop\devellopement\Thermos source\thermos neocraft\Thermos-58\buildSrc"/>
+		<item value="C:\Users\hugo\Desktop\devellopement\plugin packet thermos"/>
+		<item value="C:\Users\hugo\Desktop\devellopement\PirateGame"/>
+	</list>
+	<section name="WORKBENCH_SETTINGS">
+		<list key="ENABLED_TRANSFERS">
+		</list>
+	</section>
+	<section name="ChooseWorkspaceDialogSettings">
+		<item value="296" key="DIALOG_X_ORIGIN"/>
+		<item value="271" key="DIALOG_Y_ORIGIN"/>
+	</section>
+</section>

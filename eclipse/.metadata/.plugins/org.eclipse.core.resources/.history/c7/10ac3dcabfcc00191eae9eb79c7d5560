@@ -1,0 +1,287 @@
+package fr.neocraft.main.Pet;
+
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import fr.neocraft.main.Pet.ai.EntityAIFollowOwner;
+import fr.neocraft.main.player.PlayerStats;
+import fr.neocraft.main.player.teleport;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityAgeable;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.IEntityOwnable;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.EntityAIAttackOnCollide;
+import net.minecraft.entity.ai.EntityAIBeg;
+import net.minecraft.entity.ai.EntityAIHurtByTarget;
+import net.minecraft.entity.ai.EntityAILeapAtTarget;
+import net.minecraft.entity.ai.EntityAILookIdle;
+import net.minecraft.entity.ai.EntityAIMate;
+import net.minecraft.entity.ai.EntityAIOwnerHurtByTarget;
+import net.minecraft.entity.ai.EntityAIOwnerHurtTarget;
+import net.minecraft.entity.ai.EntityAISwimming;
+import net.minecraft.entity.ai.EntityAITargetNonTamed;
+import net.minecraft.entity.ai.EntityAIWander;
+import net.minecraft.entity.ai.EntityAIWatchClosest;
+import net.minecraft.entity.passive.EntityAnimal;
+import net.minecraft.entity.passive.EntitySheep;
+import net.minecraft.entity.passive.EntityTameable;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
+
+public class EntityPet extends EntityTameable {
+
+	private EntityPlayer owner;
+	public String pseudo = "";
+	private boolean isPlayerPet = false;
+	public int lvl =0;
+	public int curentxp=0;
+	private int PetId = 0;
+	
+	private static final int Index_Lvl = 20;
+	private static final int Index_Exp = 21;
+	private static final int Index_Id = 22;
+	private static final int Index_Pseudo = 23;
+	
+	public int LastChange = 0;
+	
+	
+	public int getMustExpLvl(int lvl)
+	{
+		return lvl*lvl+ 1 ;
+	}
+	
+	public EntityPet(World p_i1681_1_) {
+		super(p_i1681_1_);
+		this.setSize(0.5F, 0.5F);
+		this.getNavigator().setAvoidsWater(true);
+        this.tasks.addTask(1, new EntityAISwimming(this));
+        this.tasks.addTask(4, new EntityAIAttackOnCollide(this, 1.0D, true));
+        this.tasks.addTask(5, new EntityAIFollowOwner(this, 1.0D, 10.0F, 2.0F));
+        this.tasks.addTask(9, new EntityAIWatchClosest(this, EntityLivingBase.class, 8.0F));
+        this.tasks.addTask(9, new EntityAILookIdle(this));
+        this.setTamed(false);
+		this.isImmuneToFire = true;
+
+	}
+	
+	public EntityPet(World p_i1681_1_, EntityPlayer Owner, int idPet) {
+		this(p_i1681_1_);
+	
+		this.PetId = idPet;
+		this.isPlayerPet = true;
+		this.owner = Owner;
+		this.setTamed(true);
+		PlayerStats stat = PlayerStats.get(Owner);
+		stat.MyEntityPet = this;
+		this.lvl = stat.PetLvl;
+		this.curentxp = stat.PetExp; 
+		this.isImmuneToFire = true;
+
+	}
+	
+	
+	protected void entityInit()
+    {
+		super.entityInit();
+		this.dataWatcher.addObject(Index_Lvl, Integer.valueOf(this.lvl));
+		this.dataWatcher.addObject(Index_Exp, Integer.valueOf(this.curentxp));
+		this.dataWatcher.addObject(Index_Id, Integer.valueOf(this.PetId));
+		if(this.owner != null)
+		{
+			this.dataWatcher.addObject(Index_Pseudo, String.valueOf(owner.getCommandSenderName()));
+		} else {
+			this.dataWatcher.addObject(Index_Pseudo, String.valueOf(""));
+		}
+    }
+	
+	@SideOnly(Side.CLIENT)
+	public String getPseudo() {
+		return this.dataWatcher.getWatchableObjectString(Index_Pseudo);
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public int getLvl() {
+		return this.dataWatcher.getWatchableObjectInt(Index_Lvl);
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public int getExp() {
+		return this.dataWatcher.getWatchableObjectInt(Index_Exp);
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public int getId() {
+		return this.dataWatcher.getWatchableObjectInt(Index_Id);
+	}
+	
+
+	protected void applyEntityAttributes()
+    {
+        super.applyEntityAttributes();
+        this.getEntityAttribute(SharedMonsterAttributes.movementSpeed).setBaseValue(0.35000001192092896D);
+        this.getEntityAttribute(SharedMonsterAttributes.maxHealth).setBaseValue(30.0D);
+    }
+	
+
+	protected boolean isAIEnabled()
+    {
+        return true;
+    }
+	
+	
+	
+	 public void onUpdate()
+	 {
+		 super.onUpdate();
+		 if(LastChange > 0)
+		 {
+			 LastChange--;
+		 }
+		 if(isPlayerPet && !this.worldObj.isRemote)
+		 {
+			 if(this.owner == null)
+			 {
+				 this.setDead();
+			 }
+			 else if(this.owner.isDead)
+			 {
+				this.setDead();
+			 } else if(this.owner.worldObj.provider.dimensionId != this.worldObj.provider.dimensionId)
+		    {
+				 this.setDead();
+				 PlayerStats.get(this.owner).updatePet(this.owner, false);
+		    }
+		 } else if(this.worldObj.isRemote)
+		 {
+			 if(pseudo.equals(""))
+			 {
+				 pseudo = this.getPseudo();
+			 }
+		 }
+	 }
+	
+
+	 public boolean interact(EntityPlayer player) {
+	    	ItemStack playerItem = player.inventory.getCurrentItem();
+	    	LastChange = 60;
+	    	if (playerItem != null && playerItem.getItem() == Items.spawn_egg) {
+	            return super.interact(player);
+	        } else if(playerItem != null && playerItem.getItem() == PetRegister.getItemsSever(this.PetId)) {
+	        	if(player.isSneaking())
+	        	{
+	        		int count = playerItem.stackSize;
+	        		int count2 = 0;
+	        		for(int i = 0; i <= count; i++)
+	        		{
+	        			curentxp++;
+		        		if(getMustExpLvl(lvl) <= curentxp && lvl < 100)
+		        		{
+		        			lvl++;
+		        			curentxp=0;
+		        			count2++;
+		        		}
+	        		}
+	        		player.inventory.getCurrentItem().splitStack(count2);
+	        	} else {
+	        		player.inventory.getCurrentItem().splitStack(1);
+	        		curentxp++;
+	        		if(getMustExpLvl(lvl) <= curentxp && lvl < 100)
+	        		{
+	        			lvl++;
+	        			curentxp=0;
+	        		}
+	        		
+	        	}
+	        	if(!this.worldObj.isRemote)
+        		{
+        			PlayerStats stat = PlayerStats.get(player);
+        			stat.updatePet(player.getCommandSenderName(), curentxp, lvl);
+        			this.dataWatcher.updateObject(Index_Exp, curentxp);
+        			this.dataWatcher.updateObject(Index_Lvl, lvl);
+        		}else {
+        			this.curentxp = this.getExp();
+        			this.lvl = this.getLvl();
+        		}
+	        	return true;
+	        }
+	       
+	    	
+	    	return false;
+	 }
+	
+
+
+	@Override
+	public EntityLivingBase getOwner() {
+		// TODO Auto-generated method stub
+		return this.owner;
+	}
+
+	@Override
+	public EntityAgeable createChild(EntityAgeable p_90011_1_) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	
+	@SideOnly(Side.CLIENT)
+    public boolean canRenderOnFire()
+    {
+        return false;
+    }
+	
+	@Override
+	public boolean doesEntityNotTriggerPressurePlate()
+    {
+        return true;
+    }
+	
+	@Override
+	public boolean canAttackWithItem()
+    {
+        return false;
+    }
+	
+	@Override
+	public boolean hitByEntity(Entity p_85031_1_)
+    {
+        return false;
+    }
+	
+	@Override
+	public void writeToNBT(NBTTagCompound c)
+    {
+		super.writeToNBT(c);
+		
+    }
+	
+	@Override
+	public void readFromNBT(NBTTagCompound c)
+    {
+		super.readFromNBT(c);
+	
+    }
+	
+	@Override
+    protected boolean canDespawn() {
+        return false;
+    }
+	
+	 @Override
+	    protected float getSoundVolume() {
+	        return 0.5F;
+	    }
+
+	@Override
+	public String func_152113_b() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	    
+
+}

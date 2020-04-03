@@ -1,0 +1,98 @@
+/*    */ package org.gradle.internal.resource.transport.http.ntlm;
+/*    */ 
+/*    */ import java.net.InetAddress;
+/*    */ import java.net.UnknownHostException;
+/*    */ import org.gradle.internal.resource.PasswordCredentials;
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ public class NTLMCredentials
+/*    */ {
+/*    */   private static final String DEFAULT_DOMAIN = "";
+/*    */   private static final String DEFAULT_WORKSTATION = "";
+/*    */   private final String domain;
+/*    */   private final String username;
+/*    */   private final String password;
+/*    */   private final String workstation;
+/*    */   
+/*    */   public NTLMCredentials(PasswordCredentials credentials) {
+/* 34 */     String username = credentials.getUsername();
+/* 35 */     int slashPos = username.indexOf('\\');
+/* 36 */     slashPos = (slashPos >= 0) ? slashPos : username.indexOf('/');
+/* 37 */     if (slashPos >= 0) {
+/* 38 */       domain = username.substring(0, slashPos);
+/* 39 */       username = username.substring(slashPos + 1);
+/*    */     } else {
+/* 41 */       domain = System.getProperty("http.auth.ntlm.domain", "");
+/*    */     } 
+/* 43 */     this.domain = (domain == null) ? null : domain.toUpperCase();
+/* 44 */     this.username = username;
+/* 45 */     this.password = credentials.getPassword();
+/* 46 */     this.workstation = determineWorkstationName();
+/*    */   }
+/*    */ 
+/*    */   
+/*    */   private String determineWorkstationName() {
+/* 51 */     String sysPropWorkstation = System.getProperty("http.auth.ntlm.workstation");
+/* 52 */     if (sysPropWorkstation != null) {
+/* 53 */       return sysPropWorkstation;
+/*    */     }
+/*    */     
+/*    */     try {
+/* 57 */       return removeDotSuffix(getHostName()).toUpperCase();
+/* 58 */     } catch (UnknownHostException e) {
+/* 59 */       return "";
+/*    */     } 
+/*    */   }
+/*    */ 
+/*    */   
+/* 64 */   protected String getHostName() throws UnknownHostException { return InetAddress.getLocalHost().getHostName(); }
+/*    */ 
+/*    */   
+/*    */   private String removeDotSuffix(String val) {
+/* 68 */     int dotPos = val.indexOf('.');
+/* 69 */     return (dotPos == -1) ? val : val.substring(0, dotPos);
+/*    */   }
+/*    */ 
+/*    */ 
+/*    */   
+/* 74 */   public String getDomain() { return this.domain; }
+/*    */ 
+/*    */ 
+/*    */   
+/* 78 */   public String getUsername() { return this.username; }
+/*    */ 
+/*    */ 
+/*    */   
+/* 82 */   public String getPassword() { return this.password; }
+/*    */ 
+/*    */ 
+/*    */   
+/* 86 */   public String getWorkstation() { return this.workstation; }
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */   
+/* 91 */   public String toString() { return String.format("NTLM Credentials [user: %s, domain: %s, workstation: %s]", new Object[] { this.username, this.domain, this.workstation }); }
+/*    */ }
+
+
+/* Location:              C:\Users\hugo\.gradle\wrapper\dists\gradle-2.0-bin\5h57m9vra0mjv9qs45oqtsb5c0\gradle-2.0\lib\plugins\gradle-resources-http-2.0.jar!\org\gradle\internal\resource\transport\http\ntlm\NTLMCredentials.class
+ * Java compiler version: 5 (49.0)
+ * JD-Core Version:       1.0.7
+ */

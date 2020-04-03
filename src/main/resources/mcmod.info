@@ -1,0 +1,16 @@
+[
+{
+  "modid": "neocraft",
+  "name": "neocraft",
+  "description": "neocraft pvp faction moddé sous launcher ",
+  "version": "1.6.3",
+  "mcversion": "1.7.10",
+  "url": "https://www.neocraft.fr/",
+  "updateUrl": "",
+  "authorList": ["guedesite"],
+  "credits": "exclusivement réservé a neocraft",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

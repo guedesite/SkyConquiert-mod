@@ -1,0 +1,359 @@
+package fr.neocraft.packet;
+
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+
+import org.anjocaido.groupmanager.GroupManager;
+import org.anjocaido.groupmanager.permissions.AnjoPermissionsHandler;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerChatEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.server.PluginDisableEvent;
+import org.bukkit.event.server.PluginEnableEvent;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import fr.neocraft.discord.Discord;
+import fr.neocraft.discord.utils.JarUtils;
+import fr.neocraft.main.proxy.Serveur.Stage.RegisterStage;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Icon;
+import net.dv8tion.jda.api.entities.TextChannel;
+
+
+public class main extends JavaPlugin implements Listener {
+	
+	private Discord discord;
+	
+	private HashMap<String, Icon> CacheSkin = new HashMap<String, Icon>();
+	
+	public static GroupManager groupManager;
+	 @Override
+	    public void onEnable(){
+		 
+		 try {
+	            final File[] libs = new File[] {
+	                    new File(getDataFolder(), "assets/libs/commons-codec-1.10.jar"),
+	                    new File(getDataFolder(), "assets/libs/commons-io-2.5.jar"),
+	                    new File(getDataFolder(), "assets/libs/commons-logging-1.2.jar"),
+	                    new File(getDataFolder(), "assets/libs/httpclient-4.5.6.jar"),
+	                    new File(getDataFolder(), "assets/libs/httpcore-4.4.10.jar"),
+	                    new File(getDataFolder(), "assets/libs/JDA-4.0.0_39-withDependencies.jar"),
+	                    new File(getDataFolder(), "assets/libs/jsoup-1.9.2.jar"),
+	                    new File(getDataFolder(), "assets/libs/lavaplayer-1.3.22.jar")};
+	            for (final File lib : libs) {
+	                if (!lib.exists()) {
+	                    JarUtils.extractFromJar(lib.getName(),
+	                            lib.getAbsolutePath());
+	                }
+	            }
+	            for (final File lib : libs) {
+	                if (!lib.exists()) {
+	                    getLogger().warning(
+	                            "There was a critical error loading My plugin! Could not find lib: "
+	                                    + lib.getName());
+	                    Bukkit.getServer().getPluginManager().disablePlugin(this);
+	                    return;
+	                }
+	                addClassPath(JarUtils.getJarUrl(lib));
+	            }
+	        } catch (final Exception e) {
+	            e.printStackTrace();
+	        }
+		 
+		 getLogger().info("NEOCRAFT PACKET LISTENER");
+		 Bukkit.getMessenger().registerIncomingPluginChannel(this, "NeoPortailEnter", new PacketListener()); 
+		 Bukkit.getMessenger().registerIncomingPluginChannel(this, "NeoPortailEndEnter", new PacketListener()); 
+		 Bukkit.getMessenger().registerIncomingPluginChannel(this, "NeoFeuSpawn", new PacketListener()); 
+		 Bukkit.getMessenger().registerIncomingPluginChannel(this, "NeoPlatePress", new PacketListener()); 
+		 Bukkit.getMessenger().registerIncomingPluginChannel(this, "NeoPortailEndEnter", new PacketListener());
+		 Bukkit.getPluginManager().registerEvents(this, this);
+		 discord = new Discord();
+		 
+	 }
+	 @Override
+	    public void onDisable(){
+		 getLogger().info("cya :D");
+	    }
+	 
+	 @EventHandler(priority = EventPriority.MONITOR)
+		public void onPluginEnable(final PluginEnableEvent event)
+		{
+			final PluginManager pluginManager = Bukkit.getServer().getPluginManager();
+			final Plugin GMplugin = pluginManager.getPlugin("GroupManager");
+			
+			if (GMplugin != null && GMplugin.isEnabled())
+			{
+				groupManager = (GroupManager)GMplugin;
+				getLogger().info("GM FOUND");
+	 
+			}else{for(int i = 0; i < 100; i++)
+			{
+				getLogger().info("ERROR GM NOT FOUND");
+			}}
+		}
+	 
+	 
+	 private void MakeImgCache(String pseudo)
+	 {
+		 if(!CacheSkin.containsKey(pseudo))
+		 {
+			 BufferedImage image = null;
+			 URL url;
+			try { 	
+				url = new URL("https://file.neocraft.fr/get/render.php?p="+pseudo);
+				 image = ImageIO.read(url);
+				 
+					image = image.getSubimage(8, 8, 8, 8);
+					
+					ByteArrayOutputStream os = new ByteArrayOutputStream();
+					
+					ImageIO.write(image, "png", os);
+					
+					InputStream is = new ByteArrayInputStream(os.toByteArray());
+					
+					CacheSkin.put(pseudo, Icon.from(is));
+				 
+			} catch (MalformedURLException e ) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		 }
+
+	 }
+	 @EventHandler(priority = EventPriority.MONITOR)
+		public void onPluginDisable(PluginDisableEvent event)
+		{
+			if (groupManager != null)
+			{
+				if (event.getPlugin().getDescription().getName().equals("GroupManager"))
+				{
+					groupManager = null;
+				}
+			}
+		}
+	 public static String getPrefix(final Player base)
+	 	{
+	 		final AnjoPermissionsHandler handler = groupManager.getWorldsHolder().getWorldPermissions(base);
+	 		if (handler == null)
+	 		{
+	 			return null;
+	 		}
+	 		return handler.getUserPrefix(base.getName());
+	 	}
+     @EventHandler
+     public void StageFormat(PlayerChatEvent e) {
+    	 Player p = e.getPlayer();
+    	 String gr = getPrefix(p).replaceAll("&","§")+""+RegisterStage.getBukkitNameFormat(p.getName()).replaceAll("&","§")+ " | " + p.getDisplayName();
+         e.setCancelled(true);
+         String msg = gr+ " §f» " + e.getMessage().replaceAll("&","§") ;
+         for(Player pl : Bukkit.getOnlinePlayers()){
+        	 
+            pl.sendMessage(msg);
+         }
+         getLogger().info("CHAT: ["+p.getName()+"] "+e.getMessage().replaceAll("&",""));
+         MakeImgCache(p.getName());
+         Icon is = CacheSkin.get(p.getName());
+         TextChannel ch = this.discord.event.ChatMc;
+         if(is != null)
+         {
+        	 ch.getGuild().createEmote("skin-temp-"+p.getName(), is).queue();
+        	
+        	 ch.sendMessage("["+ch.getGuild().getEmotesByName("skin-temp-"+p.getName(),true).get(0).getAsMention()+"]"+clearMcColor(gr)+": "+msg).queue();
+        	 ch.getGuild().getEmotesByName("skin-temp-"+p.getName(),true).get(0).delete().queue();
+         } else {
+        	 ch.sendMessage(clearMcColor(gr)+": "+msg).queue();
+         }
+     }
+     
+     
+     @EventHandler
+     public void PlayerQuit(PlayerQuitEvent e)
+     {
+    	 Player p = e.getPlayer();
+    	 MakeImgCache(p.getName());
+         Icon is = CacheSkin.get(p.getName());
+         TextChannel ch = this.discord.event.ChatMc;
+         String gr = getPrefix(p).replaceAll("&","§")+""+RegisterStage.getBukkitNameFormat(p.getName()).replaceAll("&","§")+ " | " + p.getDisplayName();
+         if(is != null)
+         {
+        	 ch.getGuild().createEmote("skin-temp-"+p.getName(), is).queue();
+        	
+        	 ch.sendMessage("["+ch.getGuild().getEmotesByName("skin-temp-"+p.getName(),true).get(0).getAsMention()+"]"+clearMcColor(gr)+" vient de se déconnecter !").queue();
+        	 ch.getGuild().getEmotesByName("skin-temp-"+p.getName(),true).get(0).delete().queue();
+         } else {
+        	 ch.sendMessage(clearMcColor(gr)+" vient de se déconnecter !").queue();
+         }
+     }
+     
+     @EventHandler
+     public void PlayerJoin(PlayerJoinEvent e)
+     {
+    	 Player p = e.getPlayer();
+    	 MakeImgCache(p.getName());
+         Icon is = CacheSkin.get(p.getName());
+         TextChannel ch = this.discord.event.ChatMc;
+         String gr = getPrefix(p).replaceAll("&","§")+""+RegisterStage.getBukkitNameFormat(p.getName()).replaceAll("&","§")+ " | " + p.getDisplayName();
+         if(is != null)
+         {
+        	 ch.getGuild().createEmote("skin-temp-"+p.getName(), is).queue();
+        	
+        	 ch.sendMessage("["+ch.getGuild().getEmotesByName("skin-temp-"+p.getName(),true).get(0).getAsMention()+"]"+clearMcColor(gr)+" vient de se connecter !").queue();
+        	 ch.getGuild().getEmotesByName("skin-temp-"+p.getName(),true).get(0).delete().queue();
+         } else {
+        	 ch.sendMessage(clearMcColor(gr)+" vient de se connecter !").queue();
+         }
+     }
+     
+     private String clearMcColor(String st)
+     {
+    	 String finale= "";
+    	 int length = st.length();
+    	 boolean mustnext = false;
+    	 for(int i = 0; i < length;i++)
+    	 {
+    		 if(mustnext)
+    		 {
+    			 if(st.charAt(i) == '&' || st.charAt(i) == '§')
+    			 {
+    				 mustnext = true;
+    			 }
+    			 else {
+    				 finale += st.charAt(i);
+    			 }
+    		 } else {
+    			 mustnext = true;
+    		 }
+    	 }
+    	 
+    	 return st;
+     }
+     
+     @EventHandler
+     public void onPlayerJoin(PlayerJoinEvent event)
+     {
+    	 changeName("« "+getPrefix(event.getPlayer()).replaceAll("&","§")+""+RegisterStage.getBukkitNameFormat(event.getPlayer().getName()).replaceAll("&","§")+ " | " + event.getPlayer().getDisplayName()+" »", event.getPlayer());
+     }
+     public static String getAllPlayerStage()
+     {
+    	 String all = "";
+    	 for(Player pl : Bukkit.getOnlinePlayers()){
+    		 all += getPrefix(pl).replaceAll("&","§")+""+RegisterStage.getBukkitNameFormat(pl.getName()).replaceAll("&","§")+ " | " + pl.getDisplayName() +"&";
+          }
+    	 return all;
+     }
+     public static String getRecupAllPlayerStage()
+     {
+    	 return getAllPlayerStage();
+     }
+     
+     
+     
+     public static void changeName(String name, Player player) {
+         try {
+             Method getHandle = player.getClass().getMethod("getHandle");
+             Object entityPlayer = getHandle.invoke(player);
+             /*
+              * These methods are no longer needed, as we can just access the
+              * profile using handle.getProfile. Also, because we can just use
+              * the method, which will not change, we don't have to do any
+              * field-name look-ups.
+              */
+             boolean gameProfileExists = false;
+             // Some 1.7 versions had the GameProfile class in a different package
+             try {
+                 Class.forName("net.minecraft.util.com.mojang.authlib.GameProfile");
+                 gameProfileExists = true;
+             } catch (ClassNotFoundException ignored) {
+  
+             }
+             try {
+                 Class.forName("com.mojang.authlib.GameProfile");
+                 gameProfileExists = true;
+             } catch (ClassNotFoundException ignored) {
+  
+             }
+             if (!gameProfileExists) {
+                 /*
+                  * Only 1.6 and lower servers will run this code.
+                  *
+                  * In these versions, the name wasn't stored in a GameProfile object,
+                  * but as a String in the (final) name field of the EntityHuman class.
+                  * Final (non-static) fields can actually be modified by using
+                  * {@link java.lang.reflect.Field#setAccessible(boolean)}
+                  */
+                 Field nameField = entityPlayer.getClass().getSuperclass().getDeclaredField("name");
+                 nameField.setAccessible(true);
+                 nameField.set(entityPlayer, name);
+             } else {
+                 // Only 1.7+ servers will run this code
+                 Object profile = entityPlayer.getClass().getMethod("getProfile").invoke(entityPlayer);
+                 Field ff = profile.getClass().getDeclaredField("name");
+                 ff.setAccessible(true);
+                 ff.set(profile, name);
+             }
+             // In older versions, Bukkit.getOnlinePlayers() returned an Array instead of a Collection.
+             if (Bukkit.class.getMethod("getOnlinePlayers", new Class<?>[0]).getReturnType() == Collection.class) {
+                 Collection<? extends Player> players = (Collection<? extends Player>) Bukkit.class.getMethod("getOnlinePlayers").invoke(null);
+                 for (Player p : players) {
+                     p.hidePlayer(player);
+                     p.showPlayer(player);
+                 }
+             } else {
+                 Player[] players = ((Player[]) Bukkit.class.getMethod("getOnlinePlayers").invoke(null));
+                 for (Player p : players) {
+                     p.hidePlayer(player);
+                     p.showPlayer(player);
+                 }
+             }
+         } catch (Exception e) {
+             /*
+              * Merged all the exceptions. Less lines
+              */
+             e.printStackTrace();
+         }
+     }
+     
+     private void addClassPath(final URL url) throws IOException {
+         final URLClassLoader sysloader = (URLClassLoader) ClassLoader
+                 .getSystemClassLoader();
+         final Class<URLClassLoader> sysclass = URLClassLoader.class;
+         try {
+             final Method method = sysclass.getDeclaredMethod("addURL",
+                     new Class[] { URL.class });
+             method.setAccessible(true);
+             method.invoke(sysloader, new Object[] { url });
+         } catch (final Throwable t) {
+             t.printStackTrace();
+             throw new IOException("Error adding " + url
+                     + " to system classloader");
+         }
+     }
+	 
+}

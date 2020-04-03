@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item value="false" key="isRegEx"/>
+		<item value="warp" key="selection"/>
+		<item value="false" key="casesensitive"/>
+		<item value="false" key="incremental"/>
+		<item value="true" key="wrap"/>
+		<item value="false" key="wholeword"/>
+		<list key="findhistory">
+			<item value="warp"/>
+			<item value="home"/>
+			<item value="bank"/>
+			<item value="attack"/>
+			<item value="dead"/>
+			<item value="by"/>
+			<item value="neo.DENY_OWNER_OF_HIS_ILE"/>
+			<item value="quit"/>
+			<item value="Silithium"/>
+			<item value="addbank"/>
+			<item value="addbnak"/>
+			<item value="rain"/>
+			<item value="weather"/>
+			<item value="present"/>
+			<item value="Weather"/>
+		</list>
+		<list key="replacehistory">
+			<item value="God"/>
+			<item value="BuilderTileEntity"/>
+			<item value="mc"/>
+			<item value="PlanterTileEntity"/>
+			<item value="M(player, (i*100) / block.length +&quot; / 100&quot;);"/>
+			<item value="if(this.x&lt; this.x2 &amp; this.y&lt; this.y2 &amp; this.z&lt; this.z2 )"/>
+			<item value="EntityGardienEvil"/>
+			<item value="!stat.idStage.isEmpty()"/>
+			<item value="RegisterStage.getFirstStagePlayer(stat);"/>
+			<item value="ArrayList&lt;String&gt;"/>
+			<item value=""/>
+		</list>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item value="431" key="DIALOG_WIDTH"/>
+		<item value="1|Segoe UI|9.0|0|WINDOWS|1|-12|0|0|0|400|0|0|0|1|0|0|0|0|Segoe UI" key="DIALOG_FONT_NAME"/>
+		<item value="246" key="DIALOG_HEIGHT"/>
+		<item value="121" key="DIALOG_X_ORIGIN"/>
+		<item value="407" key="DIALOG_Y_ORIGIN"/>
+	</section>
+</section>
